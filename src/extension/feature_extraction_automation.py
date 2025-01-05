@@ -94,7 +94,6 @@ class APK:
         logger.info(f"Extracting features for {self.name}...")
         extractor.run(self.path, self.working_dir, console_logging=False)
         logger.info(f"Feature extraction completed for {self.name}")
-        self.check_log()
         self.delete_working_dir()
 
 
@@ -146,6 +145,16 @@ class FeatureExtractor:
 
         logger.info("Feature extraction completed.")
 
+    def check_anomalies(self) -> None:
+        """
+        Check the log files for any anomalies during extraction.
+        """
+
+        logger.info("Checking for anomalies in the log files...")
+
+        for apk in self.apk_list:
+            apk.check_log()
+
         anomaly_count = sum(apk.is_anomaly for apk in self.apk_list)
         if anomaly_count:
             logger.warning(f"{anomaly_count} anomaly apks found during extraction.")
@@ -156,6 +165,7 @@ class FeatureExtractor:
                         f.write(f"{apk.name}\n")
         else:
             logger.info("No anomaly apks found during extraction.")
+        logger.info("Anomaly check completed.")
 
 
 @app.command()
@@ -196,6 +206,7 @@ def main(
     feature_extractor.make_apk_list()
     max_workers = psutil.cpu_count(logical=False)
     feature_extractor.extract_all(max_workers=max_workers)
+    feature_extractor.check_anomalies()
     shutil.rmtree(working_dir)
 
 
