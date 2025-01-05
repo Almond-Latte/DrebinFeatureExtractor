@@ -1,3 +1,4 @@
+import re
 import subprocess
 
 import settings
@@ -29,25 +30,32 @@ def get_intents(sample_file: str) -> list[str]:
             text=True,
             check=True,
         )
-        xml_lines = result.stdout.splitlines()
+        manifest = result.stdout
 
         logger.debug("-------------------------------------------")
         logger.debug("---------- application intents ------------")
         logger.debug("-------------------------------------------")
-        for line in xml_lines:
-            line = line.strip()
-            if line.startswith("E: "):
-                # Skip Element nodes
-                continue
 
-            if "intent" in line:
-                try:
-                    intent = line.split("=")[1].split('"')[1]
-                    intent = remove_control_chars(intent)
-                    logger.debug(f"Intent: {intent}")
-                    app_intents.append(sanitize_to_ascii(intent))
-                except (IndexError, KeyError) as e:
-                    logger.error(f"Error reading intents from AndroidManifest.xml: {e}")
+        # Regular expression to match android:name attributes containing 'intent'
+        intent_pattern = re.compile(
+            r'A: android:name\(0x01010003\)="([^"]*intent[^"]*)"(?: \(Raw: "([^"]*)"\))?'
+        )
+
+        # Find all matches
+        matches = intent_pattern.findall(manifest)
+        logger.info(f"Found {len(matches)} intents in AndroidManifest.xml")
+
+        for match in matches:
+            # If both values are present, use the `Raw` value as it represents the resolved resource.
+            intent = match[1] if match[1] else match[0]
+            intent = remove_control_chars(intent)
+            intent = sanitize_to_ascii(intent)
+            app_intents.append(intent)
+            logger.debug(f"Intent: {intent}")
+
+        if not app_intents:
+            logger.warning("No intents found in the manifest")
+
     except subprocess.CalledProcessError as e:
         logger.error(f"Error extracting intents from AndroidManifest.xml: {e}")
 

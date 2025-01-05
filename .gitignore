@@ -171,5 +171,6 @@ cython_debug/
 .pypirc
 
 # for my personal use
-Downloads/
+apks/
 logs/
+reports/

@@ -22,6 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+REPORT_DIR = BASE_DIR / "reports"
 CONSOLE_LOGGING = load_env("CONSOLE_LOGGING").upper() == "TRUE"
 
 APICALLS = DATA_DIR / "APIcalls.txt"

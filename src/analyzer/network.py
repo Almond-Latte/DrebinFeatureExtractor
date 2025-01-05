@@ -1,3 +1,4 @@
+import re
 import subprocess
 
 import settings
@@ -7,45 +8,69 @@ from utils import remove_control_chars, sanitize_to_ascii
 
 def get_net(sample_file: str) -> list[str]:
     """
-    Extract network-related entries from the AndroidManifest.xml of an APK.
+    Extract all occurrences of 'android.net' references from the APK's AndroidManifest.xml.
 
     Args:
         sample_file (str): Path to the APK file.
 
     Returns:
-        list[str]: A list of network-related entries found in the AndroidManifest.xml.
+        list[str]: A list of strings containing 'android.net' references.
     """
     logger = get_logger()
-    app_net = []
+    android_net_references = []
 
-    logger.info("Extracting network data from AndroidManifest.xml")
+    logger.info("Extracting 'android.net' references from AndroidManifest.xml")
 
     try:
+        # Run aapt command to extract AndroidManifest.xml
         result = subprocess.run(
             [settings.AAPT, "d", "xmltree", sample_file, "AndroidManifest.xml"],
             capture_output=True,
             text=True,
             check=True,
         )
-        xml_lines = result.stdout.splitlines()
+        manifest = result.stdout
 
         logger.debug("-------------------------------------------")
         logger.debug("---------- application network ------------")
         logger.debug("-------------------------------------------")
-        for line in xml_lines:
-            if "android.net" in line:
-                try:
-                    net = line.split("=")[1].split('"')[1]
-                    # remove control characters
-                    net = remove_control_chars(net)
-                    if net:
-                        app_net.append(sanitize_to_ascii(net))
-                        logger.debug(f"Network: {net}")
-                except (IndexError, KeyError) as e:
-                    logger.error(
-                        f"Error reading network data from AndroidManifest.xml: {e}"
-                    )
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error extracting network data from AndroidManifest.xml: {e}")
 
-    return app_net
+        # Regular expression to find android.net references
+
+        # Match the `android:name` attribute.
+        # Example: A: android:name(0x01010003)="android.net.conn.CONNECTIVITY_CHANGE"
+        # - Captures the value in the first group: "conn.CONNECTIVITY_CHANGE"
+        android_net_pattern = re.compile(
+            r'A: android:name\(0x01010003\)="([^"]+)"'  # Capture the `android:name` value.
+            r'(?: \(Raw: "([^"]+)"\))?'  # Optionally capture the `Raw` value if present.
+        )
+
+        # Find all occurrences of 'android.net'
+        matches = android_net_pattern.findall(manifest)
+
+        for match in matches:
+            android_name = match[0]
+            raw_value = match[1]
+
+            # If both values are present, use the `Raw` value as it represents the resolved resource.
+            if "android.net" in raw_value:
+                resolved_value = raw_value
+            elif "android.net" in android_name:
+                resolved_value = android_name
+            else:
+                continue
+
+            resolved_value = remove_control_chars(resolved_value)
+            resolved_value = sanitize_to_ascii(resolved_value)
+            android_net_references.append(resolved_value)
+            logger.debug(f"Network: {resolved_value}")
+
+        if not android_net_references:
+            logger.info("No 'android.net' references found in the manifest")
+
+    except subprocess.CalledProcessError as e:
+        logger.error(
+            f"Error extracting 'android.net' references from {sample_file}: {e}"
+        )
+
+    return android_net_references

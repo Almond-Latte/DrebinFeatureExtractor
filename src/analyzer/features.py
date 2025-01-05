@@ -10,18 +10,24 @@ def get_features(sample_file: str) -> list[str]:
     Extract the features used by an application from its APK file.
 
     Args:
-        log_file (str): Path to the log file (currently unused in this implementation).
         sample_file (str): Path to the APK file.
 
     Returns:
         list[str]: A list of unique features used by the application.
+
+    Info:
+        uses-feature elements are used to specify the features that the application requires.
+        should uses-implied-feature be considered as well?
     """
     logger = get_logger()
-    app_features = []
-
     logger.info("Extracting features from badging")
+    logger.debug("-------------------------------------------")
+    logger.debug("---------- application features -----------")
+    logger.debug("-------------------------------------------")
+    app_features = set()
 
     try:
+        # Run AAPT command to get APK information
         result = subprocess.run(
             [settings.AAPT, "d", "badging", sample_file],
             capture_output=True,
@@ -30,21 +36,21 @@ def get_features(sample_file: str) -> list[str]:
         )
         sample_infos = result.stdout.splitlines()
 
-        logger.debug("-------------------------------------------")
-        logger.debug("---------- application features -----------")
-        logger.debug("-------------------------------------------")
-        for sample_info in sample_infos:
-            sample_info = sample_info.strip()
-            if sample_info.startswith("uses-feature"):
+        # Extract features from lines starting with "uses-feature"
+        for line in sample_infos:
+            if line.strip().startswith("uses-feature"):
                 try:
-                    sample_feature = sample_info.split("'")[1]
-                    sample_feature = remove_control_chars(sample_feature)
-                    if sample_feature and sample_feature not in app_features:
-                        app_features.append(sanitize_to_ascii(sample_feature))
-                        logger.debug(f"Feature: {sample_feature}")
+                    # Extract the feature name between single quotes
+                    feature = line.split("'")[1]
+                    # Sanitize and add to the set
+                    sanitized_feature = sanitize_to_ascii(remove_control_chars(feature))
+                    if sanitized_feature:
+                        app_features.add(sanitized_feature)
+                        logger.debug(f"Feature: {sanitized_feature}")
                 except IndexError:
-                    continue
+                    logger.warning(f"Malformed feature line: {line.strip()}")
+
     except subprocess.CalledProcessError as e:
         logger.error(f"Error extracting features from {sample_file}: {e}")
 
-    return app_features
+    return sorted(app_features)  # Convert set to sorted list

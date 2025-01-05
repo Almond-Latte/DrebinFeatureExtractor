@@ -4,8 +4,8 @@ from pathlib import Path
 from logger import get_logger
 
 
-def create_output(
-    working_dir: str,
+def create_report(
+    report_dir: Path,
     app_net: list[str],
     app_providers: list[str],
     app_permissions: list[str],
@@ -72,14 +72,12 @@ def create_output(
     }
 
     # Ensure output directories exist
-    working_path = Path(working_dir)
-    results_path = working_path / "results"
-    results_path.mkdir(parents=True, exist_ok=True)
+    report_dir.mkdir(parents=True, exist_ok=True)
 
     run_id = f"drebin-{app_infos[0]}"
 
     processed_output = report_to_feature_vector(output)
-    output_path = results_path / f"{run_id}.json"
+    output_path = report_dir / f"{run_id}.json"
 
     logger.info(f"Saving JSON output to {output_path}")
 

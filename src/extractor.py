@@ -22,6 +22,8 @@
 import shutil
 from pathlib import Path
 
+import typer
+
 import settings
 from analyzer.apk_info import (
     get_activities,
@@ -36,11 +38,13 @@ from analyzer.network import get_net
 from analyzer.permissions import check_api_permissions, get_permissions
 from analyzer.smali import detect_ad_networks, dex2x, parse_smali_calls, parse_smali_url
 from logger import create_logger
-from report.generator import create_output
+from report.generator import create_report
 from unpacker import unpack_sample
 
+app = typer.Typer()
 
-def run(sample_file: str, working_dir: str):
+
+def run(sample_file: Path, working_dir: Path, console_logging: bool = True):
     """
     Main program to analyze the APK sample and generate a report.
 
@@ -53,8 +57,9 @@ def run(sample_file: str, working_dir: str):
     log_dir = settings.LOG_DIR
 
     # Initialize logger
-    logger = create_logger(log_dir, apk_name, settings.CONSOLE_LOGGING)
+    logger = create_logger(log_dir, apk_name, console_logging)
     logger.info("Starting analysis...")
+
     working_dir = Path(working_dir).resolve()
     working_dir.mkdir(parents=True, exist_ok=True)
 
@@ -84,6 +89,7 @@ def run(sample_file: str, working_dir: str):
     dex_files = list(Path(unpack_location).glob("*.dex"))
     for dex in dex_files:
         # Decompile dex to smali
+        logger.info(f"Processing {dex}")
         smali_location = dex2x(working_dir, dex)
 
         # Analyze smali code
@@ -99,9 +105,13 @@ def run(sample_file: str, working_dir: str):
         # Clean up smali directory
         shutil.rmtree(smali_location)
 
+    # Clean up working directory
+    shutil.rmtree(working_dir)
+
     # Create the JSON output report
-    create_output(
-        working_dir,
+    report_dir = settings.REPORT_DIR
+    create_report(
+        report_dir,
         app_net,
         app_providers,
         app_permissions,
@@ -120,16 +130,40 @@ def run(sample_file: str, working_dir: str):
     )
 
 
-if __name__ == "__main__":
-    import argparse
+@app.command()
+def main(
+    sample_file: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        help="Path to the APK file.",
+    ),
+    working_dir: Path = typer.Argument(..., help="Path to the working directory."),
+    console_logging: bool = typer.Option(
+        settings.CONSOLE_LOGGING, help="Enable or disable console logging."
+    ),
+):
+    """
+    Analyze an APK file and save the results in the working directory.
 
-    parser = argparse.ArgumentParser(description="Analyze an APK file.")
-    parser.add_argument("sample_file", help="Path to the APK file.")
-    parser.add_argument("working_dir", help="Path to the working directory.")
-    args = parser.parse_args()
-
-    working_dir = Path(args.working_dir).resolve()
+    Args:
+        sample_file (Path): Path to the APK file.
+        working_dir (Path): Path to the working directory.
+        console_logging (bool): Enable or disable console logging.
+    """
+    # Resolve the working directory and create it if necessary
+    working_dir = working_dir.resolve()
     working_dir.mkdir(parents=True, exist_ok=True)
-    apk_file = Path(args.sample_file).resolve()
 
-    run(args.sample_file, args.working_dir)
+    # Resolve the APK file path
+    apk_file = sample_file.resolve()
+
+    # Call the run function
+    typer.echo(f"Extracting {apk_file} in {working_dir}...")
+    run(apk_file, working_dir, console_logging)
+    typer.echo("Extraction completed.")
+
+
+if __name__ == "__main__":
+    app()

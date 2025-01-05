@@ -159,12 +159,8 @@ def parse_smali_url(smali_location: str) -> list[str]:
 
     extracted_data = []
 
-    # Collect all files in the specified directory
-    file_list = [
-        os.path.join(root, filename)
-        for root, _, files in os.walk(smali_location)
-        for filename in files
-    ]
+    # Collect all smali files in the given directory
+    file_list = list(Path(smali_location).rglob("*.smali"))
 
     # Define regex patterns for URLs and IP addresses
     url_regex = re.compile(

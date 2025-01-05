@@ -1,9 +1,10 @@
+import re
 import subprocess
 from pathlib import Path
 
 import settings
 from logger import get_logger
-from utils import remove_control_chars
+from utils import remove_control_chars, sanitize_to_ascii
 
 
 def get_permissions(sample_file: str) -> list[str]:
@@ -11,7 +12,6 @@ def get_permissions(sample_file: str) -> list[str]:
     Extract the permissions declared in the APK's AndroidManifest.xml.
 
     Args:
-        log_file (str): Path to the log file (currently unused in this implementation).
         sample_file (str): Path to the APK file.
 
     Returns:
@@ -23,27 +23,34 @@ def get_permissions(sample_file: str) -> list[str]:
     logger.info("Extracting permissions from AndroidManifest.xml")
 
     try:
+        # Run aapt to extract permissions
         result = subprocess.run(
             [settings.AAPT, "d", "permissions", sample_file],
             capture_output=True,
             text=True,
             check=True,
         )
-        permissions = result.stdout.split("uses-permission: ")
+        output = result.stdout
 
         logger.debug("-------------------------------------------")
-        logger.debug("---------- application permissions ---------")
+        logger.debug("---------- application permissions --------")
         logger.debug("-------------------------------------------")
 
-        # Skip the first split part as it does not contain a permission
-        for permission in permissions[1:]:
-            permission = permission.split("\n")[0]
-            permission = remove_control_chars(permission)
-            if permission:
-                app_permissions.append(permission)
-                logger.debug(f"Permission: {permission}")
+        # Regular expression to extract 'name' values from 'uses-permission'
+        permission_pattern = re.compile(r"uses-permission: name='([^']+)'")
+        matches = permission_pattern.findall(output)
+        logger.info(f"Found {len(matches)} uses-permissions in AndroidManifest.xml")
+
+        for permission in matches:
+            sanitized_permission = sanitize_to_ascii(remove_control_chars(permission))
+            app_permissions.append(sanitized_permission)
+            logger.debug(f"uses-permission: {sanitized_permission}")
+
+        if not app_permissions:
+            logger.warning("No permissions found in the manifest")
+
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error extracting permissions from AndroidManifest.xml: {e}")
+        logger.error(f"Error extracting permissions from {sample_file}: {e}")
 
     return app_permissions
 
@@ -71,7 +78,7 @@ def check_api_permissions(smali_location: str) -> tuple[list, list]:
     except FileNotFoundError:
         raise FileNotFoundError("API calls settings file not found.")
 
-    api_permissions = []
+    api_permissions = set()
     api_calls = []
 
     # Collect all smali files
@@ -90,11 +97,11 @@ def check_api_permissions(smali_location: str) -> tuple[list, list]:
                 if api_call in smali_content:
                     permission = permission.strip()
                     if permission and permission not in api_permissions:
-                        api_permissions.append(permission)
-                        logger.debug(f"Permission: {permission}")
+                        api_permissions.add(permission)
+                        logger.debug(f"api-permission: {permission}")
                     api_calls.append([api_call, permission])
 
-        except (UnicodeDecodeError, FileNotFoundError):
-            logger.error(f"Error reading file {file_path}")
+        except (UnicodeDecodeError, FileNotFoundError) as e:
+            logger.error(f"Error reading {file_path}: {e}")
 
-    return api_permissions, api_calls
+    return list(api_permissions), api_calls
