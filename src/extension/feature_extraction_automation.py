@@ -29,6 +29,7 @@ class APK:
     path: Path
     name: str = field(init=False)
     report_dir: Path = None
+    overwrite: bool = False
     working_dir: Path = None
 
     def __post_init__(self):
@@ -93,7 +94,7 @@ class APK:
 
         logger.info(f"Extracting features for {self.name}...")
         report_file = self.report_dir / f"drebin-{self.name}.json"
-        if report_file.exists():
+        if report_file.exists() and not self.overwrite:
             logger.info(f"Report already exists for {self.name}")
             return
         extractor.run(
@@ -113,21 +114,31 @@ class FeatureExtractor:
     working_dir: Path
     log_file: Path = "feature_extraction.log"
     report_dir: Path = Path("reports")
+    overwrite: bool = False
     console_logging: bool = True
     apk_list: list[APK] = field(default_factory=list)
 
-    def make_apk_list(self) -> None:
+    def make_apk_list(self, apk_list_file: Path = None) -> None:
         """
         Populate the list of APK objects from the APK directory.
         """
-        self.apk_list = [
-            APK(path, self.report_dir) for path in self.apk_dir.glob("*.apk")
-        ]
+        if apk_list_file and apk_list_file.exists():
+            with open(apk_list_file, "r") as f:
+                apk_names = f.readlines()
+            apk_paths = [self.apk_dir / name.strip() for name in apk_names]
+            self.apk_list = [
+                APK(Path(path), self.report_dir, self.overwrite) for path in apk_paths
+            ]
+            logger.info(f"Found {len(self.apk_list)} APK files in {apk_list_file}")
+        else:
+            self.apk_list = [
+                APK(path, self.report_dir) for path in self.apk_dir.glob("*.apk")
+            ]
+            logger.info(f"Found {len(self.apk_list)} APK files in {self.apk_dir}")
+
         for apk in self.apk_list:
             unpack_dir = self.working_dir / apk.name
             apk.set_working_dir(unpack_dir)
-
-        logger.info(f"Found {len(self.apk_list)} APK files in {self.apk_dir}")
 
     def extract_all(self, max_workers: int = 4) -> None:
         """
@@ -135,6 +146,7 @@ class FeatureExtractor:
 
         Args:
             max_workers (int): Number of worker processes for parallel execution.
+
         """
         logger.info(f"Starting feature extraction with {max_workers} workers...")
         try:
@@ -147,6 +159,8 @@ class FeatureExtractor:
                         future.result()
                     except Exception as e:
                         logger.error(f"Error during extraction: {e}")
+                        # reraise
+
         except KeyboardInterrupt:
             logger.warning("Feature extraction interrupted by user.")
             executor.shutdown(wait=False, cancel_futures=True)
@@ -171,7 +185,7 @@ class FeatureExtractor:
             with open("anomaly_apks.lst", "w") as f:
                 for apk in self.apk_list:
                     if apk.is_anomaly:
-                        f.write(f"{apk.name}\n")
+                        f.write(f"{apk.name}.apk\n")
         else:
             logger.info("No anomaly apks found during extraction.")
         logger.info("Anomaly check completed.")
@@ -186,8 +200,14 @@ def main(
         dir_okay=True,
         help="Directory containing APK files.",
     ),
+    apk_list: Path = typer.Option(
+        "apk_list.lst", help="Path to the list of APK files."
+    ),
     report_dir: Path = typer.Option(
         "reports", help="Directory to save the JSON reports."
+    ),
+    overwrite: bool = typer.Option(
+        False, help="Overwrite existing reports if they exist."
     ),
     log_file: Path = typer.Option(
         "feature_extraction.log", help="Path to the log file for logging."
@@ -211,12 +231,12 @@ def main(
     # Initialize FeatureExtractor
     working_dir = extension_settings.WORKING_DIR
     feature_extractor = FeatureExtractor(
-        apk_dir, working_dir, log_file, report_dir, console_logging
+        apk_dir, working_dir, log_file, report_dir, overwrite, console_logging
     )
 
     # Execute extraction process
-    feature_extractor.make_apk_list()
-    max_workers = psutil.cpu_count(logical=False)
+    feature_extractor.make_apk_list(apk_list_file=apk_list)
+    max_workers = psutil.cpu_count()
     feature_extractor.extract_all(max_workers=max_workers)
     feature_extractor.check_anomalies()
     shutil.rmtree(working_dir)
