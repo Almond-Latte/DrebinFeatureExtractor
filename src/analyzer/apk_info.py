@@ -40,8 +40,22 @@ def get_sample_info(sample_file: Path) -> list[str]:
             [settings.AAPT, "d", "badging", sample_file],
             capture_output=True,
             text=True,
-            check=True,
+            check=False,
         )
+
+        # Handle non-zero return code
+        if result.returncode != 0:
+            stderr_message = result.stderr.strip()
+            if "ERROR getting 'android:icon'" in stderr_message:
+                logger.info(
+                    f"Ignoring icon-related error for {result.args}: {stderr_message}"
+                )
+            else:
+                logger.error(f"Error running AAPT badging: {stderr_message}")
+                raise subprocess.CalledProcessError(
+                    result.returncode, result.args, stderr_message
+                )
+
         sample_infos = result.stdout.splitlines()
 
         # Extract package name
@@ -74,7 +88,7 @@ def get_sample_info(sample_file: Path) -> list[str]:
         app_infos.append(apk_name)
 
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error extracting basic information from badging: {e}")
+        logger.error(f"Error running AAPT badging: {e}")
 
     return app_infos
 
@@ -102,8 +116,21 @@ def get_activities(sample_file: str) -> list[str]:
             [settings.AAPT, "dump", "badging", sample_file],
             capture_output=True,
             text=True,
-            check=True,
+            check=False,
         )
+
+        # Handle non-zero return code
+        if result.returncode != 0:
+            stderr_message = result.stderr.strip()
+            if "ERROR getting 'android:icon'" in stderr_message:
+                logger.info(
+                    f"Ignoring icon-related error for {result.args}: {stderr_message}"
+                )
+            else:
+                logger.error(f"Error running AAPT badging: {stderr_message}")
+                raise subprocess.CalledProcessError(
+                    result.returncode, result.args, stderr_message
+                )
         manifest = result.stdout
 
         logger.debug("---------------------------------------------------------")

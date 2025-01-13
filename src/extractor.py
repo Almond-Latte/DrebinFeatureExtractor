@@ -140,6 +140,13 @@ def main(
         dir_okay=False,
         help="Path to the APK file.",
     ),
+    report_dir: Path = typer.Argument(
+        ...,
+        exists=False,
+        file_okay=False,
+        dir_okay=True,
+        help="Path to the report directory.",
+    ),
     working_dir: Path = typer.Argument(..., help="Path to the working directory."),
     console_logging: bool = typer.Option(
         settings.CONSOLE_LOGGING, help="Enable or disable console logging."
@@ -162,7 +169,7 @@ def main(
 
     # Call the run function
     typer.echo(f"Extracting {apk_file} in {working_dir}...")
-    run(apk_file, working_dir, console_logging)
+    run(apk_file, report_dir, working_dir, console_logging)
     typer.echo("Extraction completed.")
 
 

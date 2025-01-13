@@ -32,8 +32,22 @@ def get_features(sample_file: str) -> list[str]:
             [settings.AAPT, "d", "badging", sample_file],
             capture_output=True,
             text=True,
-            check=True,
+            check=False,
         )
+
+        # Handle non-zero exit code
+        if result.returncode != 0:
+            stderr_message = result.stderr.strip()
+            if "ERROR getting 'android:icon'" in stderr_message:
+                logger.info(
+                    f"Ignoring icon-related error for {result.args}: {stderr_message}"
+                )
+            else:
+                logger.error(f"Error running AAPT badging: {stderr_message}")
+                raise subprocess.CalledProcessError(
+                    result.returncode, result.args, stderr_message
+                )
+
         sample_infos = result.stdout.splitlines()
 
         # Extract features from lines starting with "uses-feature"

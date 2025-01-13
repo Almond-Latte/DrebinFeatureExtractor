@@ -151,15 +151,14 @@ class FeatureExtractor:
         logger.info(f"Starting feature extraction with {max_workers} workers...")
         try:
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                futures = [
-                    executor.submit(apk.extract_feature) for apk in self.apk_list
-                ]
-                for future in futures:
+                futures = {
+                    executor.submit(apk.extract_feature): apk for apk in self.apk_list
+                }
+                for future, apk in fetures.items():
                     try:
                         future.result()
                     except Exception as e:
-                        logger.error(f"Error during extraction: {e}")
-                        # reraise
+                        logger.error(f"Error during extraction: {e} in {apk.name}")
 
         except KeyboardInterrupt:
             logger.warning("Feature extraction interrupted by user.")
@@ -236,7 +235,7 @@ def main(
 
     # Execute extraction process
     feature_extractor.make_apk_list(apk_list_file=apk_list)
-    max_workers = psutil.cpu_count()
+    max_workers = psutil.cpu_count(logical=False)
     feature_extractor.extract_all(max_workers=max_workers)
     feature_extractor.check_anomalies()
     shutil.rmtree(working_dir)
