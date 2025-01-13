@@ -154,7 +154,7 @@ class FeatureExtractor:
                 futures = {
                     executor.submit(apk.extract_feature): apk for apk in self.apk_list
                 }
-                for future, apk in fetures.items():
+                for future, apk in futures.items():
                     try:
                         future.result()
                     except Exception as e:
