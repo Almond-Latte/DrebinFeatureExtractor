@@ -92,7 +92,13 @@ class APK:
         """
 
         logger.info(f"Extracting features for {self.name}...")
-        extractor.run(self.path, self.working_dir, console_logging=False)
+        report_file = self.report_dir / f"drebin-{self.name}.json"
+        if report_file.exists():
+            logger.info(f"Report already exists for {self.name}")
+            return
+        extractor.run(
+            self.path, self.report_dir, self.working_dir, console_logging=False
+        )
         logger.info(f"Feature extraction completed for {self.name}")
         self.delete_working_dir()
 
@@ -106,6 +112,7 @@ class FeatureExtractor:
     apk_dir: Path
     working_dir: Path
     log_file: Path = "feature_extraction.log"
+    report_dir: Path = Path("reports")
     console_logging: bool = True
     apk_list: list[APK] = field(default_factory=list)
 
@@ -113,7 +120,9 @@ class FeatureExtractor:
         """
         Populate the list of APK objects from the APK directory.
         """
-        self.apk_list = [APK(path) for path in self.apk_dir.glob("*.apk")]
+        self.apk_list = [
+            APK(path, self.report_dir) for path in self.apk_dir.glob("*.apk")
+        ]
         for apk in self.apk_list:
             unpack_dir = self.working_dir / apk.name
             apk.set_working_dir(unpack_dir)
@@ -177,6 +186,9 @@ def main(
         dir_okay=True,
         help="Directory containing APK files.",
     ),
+    report_dir: Path = typer.Option(
+        "reports", help="Directory to save the JSON reports."
+    ),
     log_file: Path = typer.Option(
         "feature_extraction.log", help="Path to the log file for logging."
     ),
@@ -199,7 +211,7 @@ def main(
     # Initialize FeatureExtractor
     working_dir = extension_settings.WORKING_DIR
     feature_extractor = FeatureExtractor(
-        apk_dir, working_dir, log_file, console_logging
+        apk_dir, working_dir, log_file, report_dir, console_logging
     )
 
     # Execute extraction process

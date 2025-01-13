@@ -44,12 +44,15 @@ from unpacker import unpack_sample
 app = typer.Typer()
 
 
-def run(sample_file: Path, working_dir: Path, console_logging: bool = True):
+def run(
+    sample_file: Path, report_dir: Path, working_dir: Path, console_logging: bool = True
+):
     """
     Main program to analyze the APK sample and generate a report.
 
     Args:
         sample_file (str): Path to the APK sample file.
+        report_dir (str): Path to the report directory.
         working_dir (str): Path to the working directory.
     """
 
@@ -108,8 +111,6 @@ def run(sample_file: Path, working_dir: Path, console_logging: bool = True):
     # Clean up working directory
     shutil.rmtree(working_dir)
 
-    # Create the JSON output report
-    report_dir = settings.REPORT_DIR
     create_report(
         report_dir,
         app_net,
