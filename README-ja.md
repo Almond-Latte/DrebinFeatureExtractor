@@ -4,7 +4,7 @@
 
 Drebin Feature Extractorは、Androidアプリケーション（APKファイル）を静的解析し、Drebin論文で提案された特徴量を抽出してレポートを生成するツールです。
 
-このツールは、論文 "Drebin: Effective and Explainable Detection of Android Malware in Your Pocket" で述べられている特徴量抽出フェーズの再現実装です。オリジナルの実装（Mobile-SandboxによるPython 2ベース）を参考に、**Python 3.8以上、OpenJDK 11、Android SDK 36** 環境で動作するように再構築しました。
+このツールは、論文 "Drebin: Effective and Explainable Detection of Android Malware in Your Pocket" で述べられている特徴量抽出フェーズの再現実装です。オリジナルの実装（Mobile-SandboxによるPython 2ベース）を参考に、**Python 3.13、OpenJDK 11、Android SDK 36** 環境で動作するように再構築しました。
 
 抽出される特徴量はオリジナル論文に準拠していますが、**内部の実装は完全に異なっています**。このツールは、Androidマルウェア研究やアプリケーションの静的解析に利用できます。
 
@@ -66,7 +66,7 @@ Drebin Feature Extractorは、Androidアプリケーション（APKファイル�
 
 ## 必要条件
 
-- Python 3.8 以上
+- Python 3.13
   - `uv` 環境下で実行することを強く推奨します
 - OpenJDK 11
 - Android SDK 36
