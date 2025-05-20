@@ -23,6 +23,7 @@ import logging
 import shutil
 from pathlib import Path
 
+import ssdeep
 import typer
 
 import settings
@@ -141,15 +142,31 @@ def run(
             logger.warning(
                 f"Could not get services/receivers: {e}", exc_info=settings.DEBUG
             )
+
+        # Calculate ssdeep hash using 'ssdeep' library
         try:
-            ssdeep_value_str = f"hash_of_path_object_{hash(sample_file)}"
-            logger.info(
-                f"Placeholder hash generated for {sample_file.name}: {ssdeep_value_str}"
-            )
+            if sample_file.is_file():
+                ssdeep_value_str = ssdeep.hash_from_file(str(sample_file))
+                if not ssdeep_value_str:
+                    ssdeep_value_str = "N/A (ssdeep hashing failed)"
+                    logger.warning(
+                        f"ssdeep.hash_from_file failed for {sample_file.name}."
+                    )
+                else:
+                    logger.info(
+                        f"ssdeep hash for {sample_file.name}: {ssdeep_value_str}"
+                    )
+            else:
+                logger.warning(
+                    f"Sample file {sample_file} not found for ssdeep hashing."
+                )
+                ssdeep_value_str = "N/A (file not found)"
         except Exception as e:
             logger.warning(
-                f"Could not generate placeholder hash: {e}", exc_info=settings.DEBUG
+                f"Could not generate ssdeep hash for {sample_file.name} using 'ssdeep' library: {e}",
+                exc_info=settings.DEBUG,
             )
+            ssdeep_value_str = f"N/A (ssdeep error: {type(e).__name__})"
 
         if unpack_location:
             dex_files = list(Path(unpack_location).glob("*.dex"))
