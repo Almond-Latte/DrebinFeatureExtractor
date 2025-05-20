@@ -93,7 +93,7 @@ def get_sample_info(sample_file: Path) -> list[str]:
     return app_infos
 
 
-def get_activities(sample_file: str) -> list[str]:
+def get_activities(sample_file: Path) -> list[str]:
     """
     Extract all activities from the APK file. The first activity in the list is the MAIN activity.
 
@@ -155,7 +155,7 @@ def get_activities(sample_file: str) -> list[str]:
 
     logger.info("Extracting activities from AndroidManifest.xml")
     # Extract activities from AndroidManifest.xml
-    manifest_activities = []
+    manifest_activities: list[str] = []
     try:
         result = subprocess.run(
             [settings.AAPT, "d", "xmltree", sample_file, "AndroidManifest.xml"],
@@ -205,7 +205,7 @@ def get_activities(sample_file: str) -> list[str]:
     )
 
 
-def get_providers(sample_file: str) -> list[str]:
+def get_providers(sample_file: Path) -> list[str]:
     """
     Extract the providers declared in the APK's AndroidManifest.xml.
 
@@ -217,7 +217,7 @@ def get_providers(sample_file: str) -> list[str]:
         list[str]: A list of providers declared in the APK.
     """
     logger = get_logger()
-    app_providers = []
+    app_providers: list[str] = []
     logger.info("Extracting providers from AndroidManifest.xml")
 
     try:
@@ -269,7 +269,7 @@ def get_providers(sample_file: str) -> list[str]:
     return app_providers
 
 
-def get_services_receivers(sample_file: str) -> list[str]:
+def get_services_receivers(sample_file: Path) -> list[str]:
     """
     Extract services and receivers declared in the APK's AndroidManifest.xml.
 
@@ -281,7 +281,7 @@ def get_services_receivers(sample_file: str) -> list[str]:
         list[str]: A list of services and receivers declared in the APK.
     """
     logger = get_logger()
-    services_and_receivers = []
+    services_and_receivers: list[str] = []
 
     logger.info("Extracting services and receivers from AndroidManifest.xml")
     try:
@@ -336,7 +336,7 @@ def get_services_receivers(sample_file: str) -> list[str]:
     return services_and_receivers
 
 
-def get_files_inside_apk(sample_file: str) -> list[str]:
+def get_files_inside_apk(sample_file: Path) -> list[str]:
     """
     Get a list of files inside an APK file.
 
@@ -347,7 +347,7 @@ def get_files_inside_apk(sample_file: str) -> list[str]:
         list[str]: A list of file names inside the APK file.
     """
     logger = get_logger()
-    app_files = []
+    app_files: list[str] = []
 
     logger.info("Extracting files from APK")
     try:

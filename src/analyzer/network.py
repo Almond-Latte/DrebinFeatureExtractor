@@ -1,12 +1,13 @@
 import re
 import subprocess
+from pathlib import Path
 
 import settings
 from logger import get_logger
 from utils import remove_control_chars, sanitize_to_ascii
 
 
-def get_net(sample_file: str) -> list[str]:
+def get_net(sample_file: Path) -> list[str]:
     """
     Extract all occurrences of 'android.net' references from the APK's AndroidManifest.xml.
 
@@ -17,7 +18,7 @@ def get_net(sample_file: str) -> list[str]:
         list[str]: A list of strings containing 'android.net' references.
     """
     logger = get_logger()
-    android_net_references = []
+    android_net_references: list[str] = []
 
     logger.info("Extracting 'android.net' references from AndroidManifest.xml")
 

@@ -7,7 +7,7 @@ from logger import get_logger
 from utils import remove_control_chars, sanitize_to_ascii
 
 
-def get_permissions(sample_file: str) -> list[str]:
+def get_permissions(sample_file: Path) -> list[str]:
     """
     Extract the permissions declared in the APK's AndroidManifest.xml.
 
@@ -18,7 +18,7 @@ def get_permissions(sample_file: str) -> list[str]:
         list[str]: A list of permissions declared in the APK.
     """
     logger = get_logger()
-    app_permissions = []
+    app_permissions: list[str] = []
 
     logger.info("Extracting permissions from AndroidManifest.xml")
 
@@ -55,12 +55,12 @@ def get_permissions(sample_file: str) -> list[str]:
     return app_permissions
 
 
-def check_api_permissions(smali_location: str) -> tuple[list, list]:
+def check_api_permissions(smali_location: Path) -> tuple[list[str], list[str]]:
     """
     Parse smali files in the given directory and identify permissions required for API calls.
 
     Args:
-        smali_location (str): Path to the directory containing smali files.
+        smali_location (Path): Path to the directory containing smali files.
 
     Returns:
         tuple[list, list]:
@@ -78,7 +78,7 @@ def check_api_permissions(smali_location: str) -> tuple[list, list]:
     except FileNotFoundError:
         raise FileNotFoundError("API calls settings file not found.")
 
-    api_permissions = set()
+    api_permissions: set[str] = set()
     api_calls = []
 
     # Collect all smali files

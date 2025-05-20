@@ -1,17 +1,18 @@
 import re
 import subprocess
+from pathlib import Path
 
 import settings
 from logger import get_logger
 from utils import remove_control_chars, sanitize_to_ascii
 
 
-def get_intents(sample_file: str) -> list[str]:
+def get_intents(sample_file: Path) -> list[str]:
     """
     Extract the intents used by an application from its AndroidManifest.xml.
 
     Args:
-        log_file (str): Path to the log file (currently unused in this implementation).
+        log_file (Path): Path to the log file (currently unused in this implementation).
         sample_file (str): Path to the APK file.
 
     Returns:
@@ -21,7 +22,7 @@ def get_intents(sample_file: str) -> list[str]:
     logger = get_logger()
 
     logger.info("Extracting intents from AndroidManifest.xml")
-    app_intents = []
+    app_intents: list[str] = []
 
     try:
         result = subprocess.run(

@@ -11,3 +11,6 @@ dependencies = [
     "typer>=0.15.1",
     "ujson>=5.10.0",
 ]
+
+[pyright]
+typeCheckingMode = "standard"

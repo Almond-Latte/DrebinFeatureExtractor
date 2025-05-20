@@ -29,12 +29,14 @@ APICALLS = DATA_DIR / "APIcalls.txt"
 ADSLIBS = DATA_DIR / "ads.csv"
 
 
-AAPT = load_env("AAPT_PATH")
-AAPT = (BASE_DIR / AAPT).resolve()
+AAPT_str = load_env("AAPT_PATH")
+AAPT: Path = (BASE_DIR / AAPT_str).resolve()
 if not Path(AAPT).exists():
     raise FileNotFoundError(f"AAPT not found at {AAPT}")
 
-BAKSMALI = load_env("BAKSMALI_PATH")
-BAKSMALI = (BASE_DIR / BAKSMALI).resolve()
+BAKSMALI_str = load_env("BAKSMALI_PATH")
+BAKSMALI: Path = (BASE_DIR / BAKSMALI_str).resolve()
 if not Path(BAKSMALI).exists():
     raise FileNotFoundError(f"Baksmali not found at {BAKSMALI}")
+
+DEBUG = load_env("DEBUG").upper() == "TRUE"

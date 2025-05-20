@@ -8,22 +8,22 @@ import settings
 from logger import get_logger
 
 
-def dex2x(tmp_dir: str, dex_file: str) -> str:
+def dex2x(tmp_dir: Path, dex_file: Path) -> Path:
     """
     Disassemble a dex file into smali code using baksmali.
 
     Args:
-        tmp_dir (str): Temporary directory for the disassembled files.
-        dex_file (str): Path to the dex file to disassemble.
+        tmp_dir (Path): Temporary directory for the disassembled files.
+        dex_file (Path): Path to the dex file to disassemble.
 
     Returns:
-        str: Path to the directory containing the disassembled smali code.
+        Path: Path to the directory containing the disassembled smali code.
     """
     logger = get_logger()
 
     logger.info("Disassembling dex file using baksmali")
 
-    smali_location = Path(tmp_dir) / "smali"
+    smali_location = tmp_dir / "smali"
     smali_location.mkdir(parents=True, exist_ok=True)
 
     try:
@@ -45,15 +45,15 @@ def dex2x(tmp_dir: str, dex_file: str) -> str:
         logger.error(f"Error disassembling dex file: {e}")
         raise
 
-    return str(smali_location)
+    return smali_location
 
 
-def parse_smali_calls(smali_location: str) -> list[str]:
+def parse_smali_calls(smali_location: Path) -> list[str]:
     """
     Parse smali output for potentially suspicious API calls.
 
     Args:
-        smali_location (str): Path to the directory containing smali files.
+        smali_location (Path): Path to the directory containing smali files.
 
     Returns:
         list[str]: A list of potentially suspicious API calls found in the smali files.
@@ -143,7 +143,7 @@ def parse_smali_calls(smali_location: str) -> list[str]:
     return dangerous_calls
 
 
-def parse_smali_url(smali_location: str) -> list[str]:
+def parse_smali_url(smali_location: Path) -> list[str]:
     """
     Parse smali output files for URLs and IP addresses.
 
@@ -160,7 +160,7 @@ def parse_smali_url(smali_location: str) -> list[str]:
     extracted_data = []
 
     # Collect all smali files in the given directory
-    file_list = list(Path(smali_location).rglob("*.smali"))
+    file_list = list(smali_location.rglob("*.smali"))
 
     # Define regex patterns for URLs and IP addresses
     url_regex = re.compile(

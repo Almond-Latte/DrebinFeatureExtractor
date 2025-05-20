@@ -1,16 +1,17 @@
 import subprocess
+from pathlib import Path
 
 import settings
 from logger import get_logger
 from utils import remove_control_chars, sanitize_to_ascii
 
 
-def get_features(sample_file: str) -> list[str]:
+def get_features(sample_file: Path) -> list[str]:
     """
     Extract the features used by an application from its APK file.
 
     Args:
-        sample_file (str): Path to the APK file.
+        sample_file (Path): Path to the APK file.
 
     Returns:
         list[str]: A list of unique features used by the application.
@@ -24,7 +25,7 @@ def get_features(sample_file: str) -> list[str]:
     logger.debug("-------------------------------------------")
     logger.debug("---------- application features -----------")
     logger.debug("-------------------------------------------")
-    app_features = set()
+    app_features: set[str] = set()
 
     try:
         # Run AAPT command to get APK information
