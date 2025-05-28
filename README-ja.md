@@ -106,6 +106,17 @@ Drebin Feature Extractorは、Androidアプリケーション（APKファイル�
    uv sync
    ```
 
+> [!note]
+> **`uv sync` に失敗する場合**
+> 
+> 以下のパッケージがインストールされていない場合であることが多いです。Ubuntuの場合、簡単にインストールできます。
+> 
+> ```bash
+> sudo apt update
+> sudo apt install build-essential
+> sudo apt install libfuzzy-dev
+> ```
+
 
 
 ## 実行方法
