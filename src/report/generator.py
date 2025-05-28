@@ -74,7 +74,7 @@ def create_report(
     # Ensure output directories exist
     report_dir.mkdir(parents=True, exist_ok=True)
 
-    run_id = f"drebin-{app_infos[0]}"
+    run_id = f"drebin-{output['sha256']}"
 
     processed_output = report_to_feature_vector(output)
     output_path = report_dir / f"{run_id}.json"

@@ -27,8 +27,8 @@ def get_sample_info(sample_file: Path) -> list[str]:
     # Read file content and calculate hashes
     with open(sample_file, "rb") as fp:
         content = fp.read()
-    md5_of_new_job = hashlib.md5(content).hexdigest().upper()
-    sha_of_new_job = hashlib.sha256(content).hexdigest().upper()
+    md5_of_new_job = hashlib.md5(content).hexdigest().lower()
+    sha_of_new_job = hashlib.sha256(content).hexdigest().lower()
     logger.info(f"SHA256: {sha_of_new_job}")
     logger.info(f"MD5: {md5_of_new_job}")
 
