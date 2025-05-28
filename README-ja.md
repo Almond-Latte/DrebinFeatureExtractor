@@ -75,36 +75,81 @@ Drebin Feature Extractorは、Androidアプリケーション（APKファイル�
 
 ## インストール
 
-1. [Android Studio 公式サイト](https://developer.android.com/studio) からAndroid Studioをダウンロード、インストール
+### 1. [Android Studio 公式サイト](https://developer.android.com/studio) からAndroid Studioをダウンロード、インストール
 
-2. `uv` をインストール
+詳しいインストール方法は[こちら](https://developer.android.com/studio/install?hl=ja#linux)に記載があります。
 
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
+Ubuntuの場合、以下のように実行すればよいです。
+1. ダウンロードしたファイルを展開する
 
-3. リポジトリのクローン
+ダウンロードしたファイルが `android-studio-202x.x.x.xx-linux.tar.gz` の場合
+```bash
+sudo tar -xvzf android-studio-2024.3.2.14-linux.tar.gz -C /usr/local/
+```
 
-   ```
-   git clone https://github.com/Almond-Latte/DrebinFeatureExtractor
-   cd DrebinFeatureExtractor
-   ```
+2. Android Studioを起動する
+```bash
+cd /usr/local/android-studio/bin
+./studio.sh
+```
 
-4. 環境変数の設定
+3. セットアップウィザードを完了させる
 
-   - `.env.sample` をコピーして `.env` ファイルを作成します。
+### 2. Java JDK 11以降をインストールする
+このツールではbaksmali 3.0.9を使って逆アセンブルする処理が含まれている待て、Java JDK 17以降が必要です。 
+```bash
+sudo apt install openjdk-11-jdk-headless
+```
 
-     ```bash
-     cp .env.sample .env
-     ```
+   
+### 3. `uv` をインストール
+このツールではPythonのパッケージ管理ツールである **uv** の使用を強く推奨しています。
 
-   - `.env` ファイルを開き、Android SDKがインストールされた場所に編集します。
+uvを導入していない場合、以下を実行してuvを導入してください。
+詳しくは [Installing uv](https://docs.astral.sh/uv/getting-started/installation/) を参照してください。
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+ターミナルを再起動すれば自動的にパスが通ります。
 
-5. 依存関係のインストール
+### 4. リポジトリのクローン
+```
+git clone https://github.com/Almond-Latte/DrebinFeatureExtractor
+cd DrebinFeatureExtractor
+```
 
-   ```bash
-   uv sync
-   ```
+### 5. 環境変数の設定
+1. `.env.sample` をコピーして `.env` ファイルを作成します。
+```bash
+cp .env.sample .env
+```
+
+2. `.env` ファイルを開き、Android SDKがインストールされた場所に編集します。
+`PYTHONPATH`と`AAPT_PATH`を正しく修正してください。
+```bash
+PYTHONPATH=/home/USERNAME/DrebinFeatureExtractor/src
+AAPT_PATH=/home/USERNAME/Android/Sdk/build-tools/xx.x.x/aapt # Set the path to the aapt tool in the Android SDK
+BAKSMALI_PATH=tools/baksmali-3.0.9.jar
+CONSOLE_LOGGING=True
+DEBUG=True
+```
+
+### 6. 依存関係のインストール
+uvを使って依存関係を解決します。
+```bash
+uv sync
+```
+
+> [!note]
+> **`uv sync` に失敗する場合**
+> 
+> 以下のパッケージがインストールされていない場合であることが多いです。Ubuntuの場合、簡単にインストールできます。
+> 
+> ```bash
+> sudo apt update
+> sudo apt install build-essential
+> sudo apt install libfuzzy-dev
+> ```
 
 
 
@@ -129,9 +174,9 @@ uv run src/extractor.py --help
 
 
 ### 指定したディレクトリ内のすべてのAPKファイルを解析する場合
-
+`.env` ファイルで`PYTHONPATH`を設定しているので、忘れず`.env`ファイルを読み込むようにしてください。
 ```bash
-uv run src/extension/feature_extraction_automation.py [apk_dir]
+uv run --env-file .env src/extension/feature_extraction_automation.py [apk_dir]
 ```
 
 - `[apk_dir]`: 解析対象のAPKが格納されているディレクトリ
