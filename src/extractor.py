@@ -72,7 +72,7 @@ def run(
     app_intents: list[str] = []
     app_files: list[str] = []
     services_and_receiver: list[str] = []
-    ssdeep_value_str: str = "N/A"
+    ssdeep_value: str = "N/A"
 
     dangerous_calls: list[str] = []
     app_urls: list[str] = []
@@ -146,27 +146,27 @@ def run(
         # Calculate ssdeep hash using 'ssdeep' library
         try:
             if sample_file.is_file():
-                ssdeep_value_str = ssdeep.hash_from_file(str(sample_file))
-                if not ssdeep_value_str:
-                    ssdeep_value_str = "N/A (ssdeep hashing failed)"
+                ssdeep_value = ssdeep.hash_from_file(str(sample_file))
+                if not ssdeep_value:
+                    ssdeep_value = "N/A (ssdeep hashing failed)"
                     logger.warning(
                         f"ssdeep.hash_from_file failed for {sample_file.name}."
                     )
                 else:
                     logger.info(
-                        f"ssdeep hash for {sample_file.name}: {ssdeep_value_str}"
+                        f"ssdeep hash for {sample_file.name}: {ssdeep_value}"
                     )
             else:
                 logger.warning(
                     f"Sample file {sample_file} not found for ssdeep hashing."
                 )
-                ssdeep_value_str = "N/A (file not found)"
+                ssdeep_value = "N/A (file not found)"
         except Exception as e:
             logger.warning(
                 f"Could not generate ssdeep hash for {sample_file.name} using 'ssdeep' library: {e}",
                 exc_info=settings.DEBUG,
             )
-            ssdeep_value_str = f"N/A (ssdeep error: {type(e).__name__})"
+            ssdeep_value = f"N/A (ssdeep error: {type(e).__name__})"
 
         if unpack_location:
             dex_files = list(Path(unpack_location).glob("*.dex"))
@@ -223,22 +223,22 @@ def run(
 
         logger.info("Creating report...")
         create_report(
-            report_dir,
-            app_net,
-            app_providers,
-            app_permissions,
-            app_features,
-            app_intents,
-            services_and_receiver,
-            detected_ads,
-            dangerous_calls,
-            app_urls,
-            app_infos,
-            api_permissions_list,
-            api_calls,
-            app_files,
-            app_activities,
-            ssdeep_value_str,
+            report_dir=report_dir,
+            app_net=app_net,
+            app_providers=app_providers,
+            app_permissions=app_permissions,
+            app_features=app_features,
+            app_intents=app_intents,
+            services_and_receiver=services_and_receiver,
+            detected_ads=detected_ads,
+            dangerous_calls=dangerous_calls,
+            app_urls=app_urls,
+            app_infos=app_infos,
+            api_permissions=api_permissions_list,
+            api_calls=api_calls,
+            app_files=app_files,
+            app_activities=app_activities,
+            ssdeep_value=ssdeep_value,
         )
         logger.info(f"Analysis for {apk_name} finished successfully.")
 

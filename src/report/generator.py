@@ -97,7 +97,11 @@ def report_to_feature_vector(report: dict[str, any]) -> dict[str, int]:
     Returns:
         dict[str, int]: Processed feature vector dictionary.
     """
-    output = {"sha256": report["sha256"]}
+    output = {
+        "sha256": report["sha256"],
+        "md5": report["md5"],
+        "ssdeep": report["ssdeep"],
+    }
 
     def key_fmt(k: str, val: str) -> str:
         return f"{k}::{val.strip()}".replace(".", "_")
