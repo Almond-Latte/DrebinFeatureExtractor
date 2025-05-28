@@ -95,7 +95,7 @@ cd /usr/local/android-studio/bin
 
 3. セットアップウィザードを完了させる
 
-### 2. Java JDK 17以降をインストールする
+### 2. Java JDK 11以降をインストールする
 このツールではbaksmali 3.0.9を使って逆アセンブルする処理が含まれている待て、Java JDK 17以降が必要です。 
 ```bash
 sudo apt install openjdk-11-jdk-headless
